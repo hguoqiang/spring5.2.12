@@ -132,6 +132,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			customizeBeanFactory(beanFactory);
 			// 加载所有的bean 封装成 eanDefinition
 			loadBeanDefinitions(beanFactory);
+
 			this.beanFactory = beanFactory;
 		}
 		catch (IOException ex) {

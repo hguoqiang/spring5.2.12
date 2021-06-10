@@ -64,6 +64,7 @@ public class DelegatingEntityResolver implements EntityResolver {
 		 * 这行代码有神奇的事情，schemaResolver.schemaMappings 的值是从 spring.scheme文件中读到的，但是是什么时机读到的 ，debug过程会调用toString方法
 		 * see {@link PluggableSchemaResolver#toString() } toString 调用了 {@link PluggableSchemaResolver#getSchemaMappings()} 给 schemaMappings 赋值的
 		 */
+
 		this.schemaResolver = new PluggableSchemaResolver(classLoader);
 	}
 
