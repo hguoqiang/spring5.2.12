@@ -140,7 +140,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	public AbstractAutowireCapableBeanFactory() {
 		super();
-		// 设置 忽略的 接口
+		// 设置 忽略的 接口 org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeAwareMethods 这个方法设置过
 		ignoreDependencyInterface(BeanNameAware.class);
 		ignoreDependencyInterface(BeanFactoryAware.class);
 		ignoreDependencyInterface(BeanClassLoaderAware.class);
@@ -396,6 +396,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throws BeansException {
 
 		Object result = existingBean;
+		//这里进行aop代理对象的创建 这个类 AbstractAutoProxyCreator
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessAfterInitialization(result, beanName);
 			if (current == null) {
@@ -455,6 +456,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Make sure bean class is actually resolved at this point, and
 		// clone the bean definition in case of a dynamically resolved Class
 		// which cannot be stored in the shared merged bean definition.
+		//获取类信息，
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
@@ -537,7 +539,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (instanceWrapper == null) {
-			// 实例化 bean , Constructor ctor = clazz.getConstructor();  Object instance = ctor.newInstance();
+			// 实例化 bean , Constructor ctor = clazz.getConstructor();  Object instance = ctor.newInstance();，
+			// 仅仅是调用构造方法，没有设置属性值
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 
@@ -581,15 +584,21 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						"' to allow for resolving potential circular references");
 			}
 
+			//把实例化完成的早期bean对象 先添加到三级缓存
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
 		// Initialize the bean instance.
+		//初始化bean实例
 		Object exposedObject = bean;
 		try {
 			//初始化开始----> 填充属性, 属性赋初始值
 			populateBean(beanName, mbd, instanceWrapper);
 
+			// 如果这个bean实现了xxxAware，执行其方法，
+			// 执行 BeanPostProcessors  的 postProcessorBeforeInitialization
+			// 执行 init 方法
+			// 执行 BeanPostProcessors  的 postProcessorAfterInitialization(这里进行aop代理对象的创建)
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 
 		} catch (Throwable ex) {
@@ -1698,7 +1707,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					}
 					originalValue = new DependencyDescriptor(new MethodParameter(writeMethod, 0), true);
 				}
+				//给属性赋值，获取依赖的对象
 				Object resolvedValue = valueResolver.resolveValueIfNecessary(pv, originalValue);
+
 				Object convertedValue = resolvedValue;
 				boolean convertible = bw.isWritableProperty(propertyName) &&
 						!PropertyAccessorUtils.isNestedOrIndexedProperty(propertyName);

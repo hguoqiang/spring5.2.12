@@ -38,14 +38,22 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyTransactionManagementConfiguration extends AbstractTransactionManagementConfiguration {
+	/*
+	ProxyTransactionManagementConfiguration是⼀个容器配置类，注册了⼀个组件
+	transactionAdvisor，称为事务增强器，然后在这个事务增强器中⼜注⼊了两个属性：
+	transactionAttributeSource，即属性解析器transactionAttributeSource 和 事务拦截器transactionInterceptor
+	 */
 
 	@Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
 			TransactionAttributeSource transactionAttributeSource, TransactionInterceptor transactionInterceptor) {
 
+		// 事务增强器
 		BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
+		// 向事务增强器中注⼊ 属性解析器 transactionAttributeSource
 		advisor.setTransactionAttributeSource(transactionAttributeSource);
+		// 向事务增强器中注⼊ 事务拦截器 transactionInterceptor
 		advisor.setAdvice(transactionInterceptor);
 		if (this.enableTx != null) {
 			advisor.setOrder(this.enableTx.<Integer>getNumber("order"));
@@ -56,12 +64,14 @@ public class ProxyTransactionManagementConfiguration extends AbstractTransaction
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionAttributeSource transactionAttributeSource() {
+		// 属性解析器 transactionAttributeSource
 		return new AnnotationTransactionAttributeSource();
 	}
 
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionInterceptor transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
+		// 事务拦截器 transactionInterceptor
 		TransactionInterceptor interceptor = new TransactionInterceptor();
 		interceptor.setTransactionAttributeSource(transactionAttributeSource);
 		if (this.txManager != null) {

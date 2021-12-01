@@ -319,6 +319,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 					"Detected cyclic loading of " + encodedResource + " - check your import definitions!");
 		}
 
+		//把 xml文件封装成 InputStream
 		try (InputStream inputStream = encodedResource.getResource().getInputStream()) {
 			InputSource inputSource = new InputSource(inputStream);
 			if (encodedResource.getEncoding() != null) {
@@ -380,7 +381,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 			//把xml转成document
 			Document doc = doLoadDocument(inputSource, resource);
 
-			//document 包装的是 node,把node节点信息 封装成 BeanDefinition
+			//document 包装的是 node,把node节点信息 封装成 BeanDefinition，并进行注册
 			int count = registerBeanDefinitions(doc, resource);
 
 			if (logger.isDebugEnabled()) {
@@ -504,11 +505,11 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 */
 	public int registerBeanDefinitions(Document doc, Resource resource) throws BeanDefinitionStoreException {
 		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
-
+		//获取已有的BeanDefinition数量
 		int countBefore = getRegistry().getBeanDefinitionCount();
-
+		//注册BeanDefinition
 		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));
-
+		//返回新注册的 BeanDefinition 数量
 		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}
 

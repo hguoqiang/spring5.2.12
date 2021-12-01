@@ -238,14 +238,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			String name, @Nullable Class<T> requiredType, @Nullable Object[] args, boolean typeCheckOnly)
 			throws BeansException {
 
-		//转换bean 名称
+		//转换bean 名称，如果是以&开头则去掉&，如果是别名则获取真正的bean名字
 		String beanName = transformedBeanName(name);
 		Object bean;
 
 		// Eagerly check singleton cache for manually registered singletons.
-		//检查手动注册的单例缓存
+		//检查手动注册的单例缓存，单纯理解 尝试从缓存中获取bean
 		Object sharedInstance = getSingleton(beanName);
 
+		//如果已经存在则返回
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -256,17 +257,19 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
+			//针对 FactoryBean 的处理
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		} else {
 
 			// Fail if we're already creating this bean instance: We're assumably within a circular reference.
 			// 如果我们已经在创建这个bean实例，则失败:我们假定在一个循环引用中。
-			//如果是单例对象就解决循环依赖的问题，如果是原型就直接抛出异常
+			//如果是原型且开启了循环依赖就直接抛出异常，如果是单例对象就解决循环依赖的问题
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
 			// Check if bean definition exists in this factory.
+			//检查父工厂中是否存在该对象
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
@@ -292,11 +295,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			try {
+				//合并父子bean的属性
 				RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on. 保证初始化当前bean所依赖的bean
 				//如果当前bean 存在依赖的bean ,优先实例化依赖的bean
+				//dependsOn 是指spring框架在初始化A时必须先把某个指定的B初始化，创建顺序上来说
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {

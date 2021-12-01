@@ -283,6 +283,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			//先从一级缓存获取
 			Object singletonObject = this.singletonObjects.get(beanName);
 			if (singletonObject == null) {
+				//是否正在被销毁，抛出异常
 				if (this.singletonsCurrentlyInDestruction) {
 					throw new BeanCreationNotAllowedException(beanName,
 							"Singleton bean creation not allowed while singletons of this factory are in destruction " +
@@ -292,7 +293,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
 
-				//检查当前对象的加载状态，有个正在创建中的对象的集合，检查这个集合有没有，没有就加入，标记这个对象在创建中
+				//检查当前对象的加载状态，有个正在创建中的对象的集合，检查这个集合有没有，没有就加入，标记这个对象在创建中，因为spring框架创建bean的步骤很多，需要标识
 				beforeSingletonCreation(beanName);
 
 				boolean newSingleton = false;
@@ -302,7 +303,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				}
 
 				try {
-					//开始进行bean对象的创建
+					//开始进行bean对象的创建，传进来的进行调用，lambda表达式使用
 					singletonObject = singletonFactory.getObject();
 
 					newSingleton = true;
