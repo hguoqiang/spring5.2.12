@@ -542,6 +542,29 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Invoke factory processors registered as beans in the context.
 				//在上下文中调用注册为bean的工厂处理器， 对实现 BeanFactoryPostProcessor接口的bean进行实例化，并且对 postProcessBeanFactory 方法完成调用
+				/*==================追踪springboot源码时记录以下笔记===start================
+				所有bean的实例化都在这个方法内，重点。这个方法有三步：
+				 1、定位 Resource (资源指要把哪些类生成对象，存到容器中):
+				 在spring boot中，包扫描是从主类所在的包开始扫描的，在 org.springframework.boot.SpringApplication#prepareContex()方法中，
+				 会先将主类解析成 BeanDefinition，然后在此处refresh()方法内的 invokeBeanFactoryPostProcessors() 这个方法中解析主类的 BeanDefinition 获取 basePackage 的路径，
+				 这样就完成了定位的过程。其次spring boot中的各种 starter 是通过SPI扩展机制来实现的自动装配，spring boot 的自动装配同样是在 invokeBeanFactoryPostProcessors
+				 这个方法内实现的。还有一种情况，在spring boot 中有很多 @EnableXXX 注解，点进去看实际是借助 @Import 注解导入一些类，在 invokeBeanFactoryPostProcessors 这个方法内
+				 也实现了对该注解指定的配置类的定位加载。
+				 常规的springboot对资源有三种定位: 第一个是主类所在包的（@ComponentScan注解扫描包内及其子包内的标注这些@Configuration、 @Component、@Service、@Controller注解的类，生成实例对象，存入容器），
+				 第二个是SPI扩展机制实现的自动装配（比如各种starter，META-INF下的spring.factories文件，获取类的全路径），第三个就是@Import注解指定的类。
+
+				 2、BeanDefinition 载入:
+				 在第一步知道了Resource的定位情况，紧接着就是 BeanDefinition 的分别载入,所谓载入就是通过上面得到的basePackage，
+				 spring boot会将路径拼接成：classpath:com/lagou/XX/.class 这样的形式，然后一个叫做 X PathMatchingResourcePatternResolver的类会将该路径下所有的.class文件都加载进来，然后遍历判断
+				 是不是有@Component注解，如果有点话，就是我们要装载的 BeanDefinition。大致过程就这样。
+				 @Configuration、 @Component、@Service、@Controller、@Bean 等注解底层都是@Component注解。
+
+				 3、注册 BeanDefinition
+				 这个过程是调用上下文中的 BeanDefinitionRegister接口的实现类来完成的，这个注册就是把载入过程中解析得到的 BeanDefinition 向IOC容器进行注册，
+				 通过分析，在IOC容器中将 BeanDefinition 注入到一个 ConCurrentHashMap 中，IOC容器就是通过这个map来持有这些BeanDefinition数据的，比如 DefaultListableBeanFactory
+				 中的 beanDefinitionMap 属性
+				==================追踪springboot源码时记录以下笔记===end================*/
+
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -755,6 +778,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
 
+		//重点
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
