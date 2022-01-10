@@ -250,8 +250,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * {@link Configuration} classes.
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
+
+		// 在spring boot启动时，这个 configCandidates 里面就有一个 @SpringbootApplication 注解标注的核心启动类名称
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
-		// 在spring boot启动时，这个 candidateNames里面就有一个 @SpringbootApplication 注解标注的核心启动类名称
+
 		String[] candidateNames = registry.getBeanDefinitionNames();
 
 		for (String beanName : candidateNames) {
