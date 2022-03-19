@@ -206,6 +206,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 	/**
 	 * Derive further bean definitions from the configuration classes in the registry.
+	 * 从注册表中的配置类进一步派生bean定义。
 	 */
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
@@ -248,6 +249,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	/**
 	 * Build and validate a configuration model based on the registry of
 	 * {@link Configuration} classes.
+	 *
+	 * 首先从当前bean容器中取出全部的bean的定义，然后从中挑选出候选集。什么样的类可以是候选集？
+	 * @Configuration标注的bean定义，或者带有@Bean注解的bean定义。然后new了一个parser，
+	 * 针对之前的候选集一个一个parse，然后从parser中取到parse后的bean定义，交给reader注册。
+
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 
@@ -311,6 +317,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 			//解析 标注 @SpringbootApplication 注解的核心启动类上的所有注解，@ComponentScan 和 @Import
 			parser.parse(candidates);
+			//至此整个parse逻辑结束，接着会走到 reader 的 loadBeanDefinitions 方法中：
 			parser.validate();
 
 			Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
@@ -324,6 +331,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			}
 			//把解析得到的类，注册成BeanDefinition
 			this.reader.loadBeanDefinitions(configClasses);
+			//至此，bean的注册完成。 AnnotationConfigApplicationContext 的原理。总体是通过一个 BeanFactoryPostProcessor 完成的。
 			alreadyParsed.addAll(configClasses);
 
 			candidates.clear();
